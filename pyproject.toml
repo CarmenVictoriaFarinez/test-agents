@@ -1,0 +1,14 @@
+[project]
+name = "ringr_agents"
+version = "0.1.0"
+description = "Prueba técnica"
+requires-python = ">=3.10"
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
