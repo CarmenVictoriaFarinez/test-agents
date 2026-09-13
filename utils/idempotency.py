@@ -20,7 +20,7 @@ class IdempotencyStore:
     Almacenamiento en memoria de action_ids. Interfaz simple:
       - exists(action_id) -> bool
       - add(action_id) -> None
-    En producción podrías reemplazarlo por Redis, DB, etc.
+    En producción podrías reemplazarlo por una DB.
     """
 
     def __init__(self, initial: Optional[Set[str]] = None) -> None:

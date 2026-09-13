@@ -19,7 +19,7 @@ def test_debt_turn_uses_models_and_builds_post_request():
 
     result = DebtAgent().handle_turn(conversation, parser)
 
-    assert result.status == "action_built"
+    assert result.status == "action_succeeded"
     assert result.response_status_code == 200
     assert result.agent_response == "He registrado tu compromiso de pago correctamente."
     assert result.action_request == {
@@ -43,7 +43,7 @@ def test_assistance_turn_builds_request_without_real_http_call():
         ParserModel({"request": "Necesito ayuda", "extra_headers": {"X-Queue": "human"}}),
     )
 
-    assert result.status == "action_built"
+    assert result.status == "action_succeeded"
     assert result.response_status_code == 200
     assert result.agent_response == "He registrado tu solicitud para que la gestione nuestro equipo."
     assert result.action_request["method"] == "POST"
@@ -87,7 +87,7 @@ def test_same_action_is_not_built_twice():
     first = agent.handle_turn(conversation, parser)
     second = agent.handle_turn(conversation, parser)
 
-    assert first.status == "action_built"
+    assert first.status == "action_succeeded"
     assert second.status == CODE_DUPLICATE
     assert second.action_request is None
     assert second.agent_response == "Esta acción ya había sido procesada."

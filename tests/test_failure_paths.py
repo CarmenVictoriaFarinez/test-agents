@@ -157,7 +157,7 @@ def test_assistance_normalizes_non_string_and_blank_requests():
     numeric = agent.handle_turn(ConversationModel("help"), ParserModel({"request": 123}))
     blank = agent.handle_turn(ConversationModel("help"), ParserModel({"request": "   "}))
 
-    assert numeric.status == "action_built"
+    assert numeric.status == "action_succeeded"
     assert numeric.action_request["body"]["request"] == "123"
     assert blank.status == "no_action"
 
@@ -200,5 +200,5 @@ def test_success_result_uses_agent_default_message():
         ConversationModel("input"), ParserModel({"value": "data"})
     )
 
-    assert result.status == "action_built"
+    assert result.status == "action_succeeded"
     assert result.agent_response == "La acción se ha procesado correctamente."

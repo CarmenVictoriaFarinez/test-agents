@@ -178,7 +178,7 @@ Los headers adicionales del parser se conservan y se normalizan a minúsculas. `
 HttpAction(..., simulated_status_code=200)
 ```
 
-Un código `200` o cualquier código menor que `400` genera `action_built`. Un código `400` o superior genera `action_failed` y no registra la acción como procesada, por lo que puede reintentarse.
+Un código `200` o cualquier código menor que `400` genera `action_succeeded`. Un código `400` o superior genera `action_failed` y no registra la acción como procesada, por lo que puede reintentarse.
 
 ## Resultado del turno
 
@@ -187,7 +187,7 @@ Un código `200` o cualquier código menor que `400` genera `action_built`. Un c
 ```python
 AgentResult(
     action_request=request,
-    status="action_built",
+    status="action_succeeded",
     details={"action_id": "..."},
     response_status_code=200,
     agent_response="He registrado tu compromiso de pago correctamente.",
@@ -196,7 +196,7 @@ AgentResult(
 
 Estados disponibles:
 
-- `action_built`: acción procesada correctamente.
+- `action_succeeded`: acción procesada correctamente.
 - `no_action`: no se cumplen las condiciones para actuar.
 - `duplicate_ignored`: la acción ya fue procesada.
 - `conversation_error`: no se pudo obtener la respuesta del usuario.
@@ -208,9 +208,9 @@ Estados disponibles:
 
 ## Idempotencia
 
-El identificador se calcula con la URL y el body de la acción. El JSON se ordena antes de calcular SHA-256, por lo que el mismo contenido produce el mismo identificador aunque cambie el orden de las claves.
+El identificador de idempotencia se calcula a partir de la URL y el body de la acción. El JSON se serializa de forma determinista antes de calcular SHA-256, por lo que acciones con el mismo contenido producen el mismo identificador aunque difiera el orden de las claves.
 
-`IdempotencyStore` es un almacenamiento en memoria sustituible. Para producción puede reemplazarse por Redis o una base de datos sin cambiar el flujo de `BaseAgent`.
+`IdempotencyStore` es un almacenamiento en memoria sustituible. Para producción puede reemplazarse por una base de datos sin cambiar el flujo de `BaseAgent`.
 
 ## Extensibilidad
 
@@ -224,6 +224,16 @@ Para añadir un nuevo tipo de acción:
 6. Añade tests para éxito, ausencia de acción, errores e idempotencia.
 
 `BaseAgent` no necesita conocer los detalles de la nueva integración.
+
+## Procesamiento asíncrono y evoluciòn futura.
+
+El núcleo actual (`BaseAgent.handle_turn`) es síncrono de forma intencionada: procesa un turno completo y devuelve su resultado antes de finalizar el flujo de ejecución.
+
+Esta decisión mantiene el procesamiento determinista y evita introducir complejidad de concurrencia que no es necesaria para los requisitos actuales.
+
+En un escenario de alto volumen, una capa externa de workers podría ejecutar varios turnos en paralelo. En ese caso, el almacenamiento de idempotencia debería ser persistente y la operación de registro debería ser atómica para evitar que dos workers procesen simultáneamente la misma acción.
+
+La arquitectura actual permite añadir esta capa de orquestación sin modificar la lógica de negocio de los agentes.
 
 ## Logging
 
@@ -280,4 +290,5 @@ Cobertura aproximada: 98%
 - `Action` tiene una única definición compartida para evitar contratos divergentes.
 - Los modelos se expresan mediante Protocols para permitir mocks e implementaciones futuras.
 - Las integraciones son simuladas para que los tests sean deterministas y no dependan de servicios externos.
-- La idempotencia se aplica antes de procesar una acción repetida y solo se confirma después de una respuesta exitosa.
+- La idempotencia se aplica antes de procesar una acción repetida y solo se registra como procesada después de una ejecución exitosa.
+- No se introduce concurrencia ni procesamiento distribuido porque no forma parte de los requisitos actuales y añadirlo aumentaría la complejidad sin aportar valor en este contexto.

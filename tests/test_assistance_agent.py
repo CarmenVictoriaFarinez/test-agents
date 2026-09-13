@@ -19,7 +19,7 @@ def test_assistance_builds_action_when_request_present():
     agent = AssistanceAgent()
     parser = DummyParser({"request": "I need help", "extra_headers": {"X-Parser-Id": "xyz"}})
     result = agent.handle_turn(ConversationModel("help"), parser)
-    assert result.status == "action_built"
+    assert result.status == "action_succeeded"
     assert result.action_request["body"]["request"] == "I need help"
     assert result.action_request["headers"]["x-parser-id"] == "xyz"
 
@@ -29,6 +29,6 @@ def test_assistance_duplicate_ignored_shared_store():
     a2 = AssistanceAgent(idempotency_store=store)
     parser = DummyParser({"request": "I need help"})
     r1 = a1.handle_turn(ConversationModel("help"), parser)
-    assert r1.status == "action_built"
+    assert r1.status == "action_succeeded"
     r2 = a2.handle_turn(ConversationModel("help"), parser)
     assert r2.status == CODE_DUPLICATE

@@ -171,7 +171,7 @@ class BaseAgent(ABC):
         self._idempotency.add(action_id)
         logger.info("action_succeeded agent=%s status_code=%s", type(self).__name__, response.status_code)
         return self._result(
-            "action_built",
+            "action_succeeded",
             action_request=request,
             details={"action_id": action_id},
             response_status_code=response.status_code,

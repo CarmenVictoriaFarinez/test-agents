@@ -16,8 +16,8 @@ def test_shared_idempotency_across_agents():
     pa = DummyParser({"request": "help me"})
     rd = d.handle_turn(ConversationModel("ok"), pd)
     ra = a.handle_turn(ConversationModel("ok"), pa)
-    assert rd.status == "action_built"
-    assert ra.status == "action_built"
+    assert rd.status == "action_succeeded"
+    assert ra.status == "action_succeeded"
     # Re-run same debt action -> duplicate
     rd2 = d.handle_turn(ConversationModel("ok"), pd)
-    assert rd2.status != "action_built"
+    assert rd2.status != "action_succeeded"

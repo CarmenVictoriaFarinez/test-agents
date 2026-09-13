@@ -19,7 +19,7 @@ def test_debt_agent_builds_action_when_both_present():
     agent = DebtAgent()
     parser = DummyParser({"commitment_date": "2026-09-15", "committed_amount": 150.0, "extra_headers": {"X-Parser-Id": "abc"}})
     result = agent.handle_turn(ConversationModel("confirmo"), parser)
-    assert result.status == "action_built"
+    assert result.status == "action_succeeded"
     assert isinstance(result.action_request, dict)
     assert result.action_request["body"]["committed_amount"] == 150.0
     assert result.action_request["headers"]["x-parser-id"] == "abc"
@@ -30,6 +30,6 @@ def test_debt_agent_duplicate_ignored_with_shared_store():
     agent2 = DebtAgent(idempotency_store=store)
     parser = DummyParser({"commitment_date": "2026-09-15", "committed_amount": 150.0})
     r1 = agent1.handle_turn(ConversationModel("ok"), parser)
-    assert r1.status == "action_built"
+    assert r1.status == "action_succeeded"
     r2 = agent2.handle_turn(ConversationModel("ok"), parser)
     assert r2.status == CODE_DUPLICATE
