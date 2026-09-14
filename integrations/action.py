@@ -10,7 +10,7 @@ from utils.idempotency import compute_action_id
 from integrations.contracts import Action
 
 _SENSITIVE = {"authorization", "content-type"}
-RINGR_BEARER_TOKEN_ENV = "RINGR_BEARER_TOKEN"
+RINGR_BEARER_TOKEN = "RINGR_BEARER_TOKEN"
 load_dotenv()
 
 
@@ -59,9 +59,9 @@ class HttpAction(Action):
         return compute_action_id(self.url, self.payload)
 
     def build_request(self) -> Dict[str, Any]:
-        bearer_token = os.getenv(RINGR_BEARER_TOKEN_ENV)
+        bearer_token = os.getenv(RINGR_BEARER_TOKEN)
         if not bearer_token:
-            raise ValueError(f"Missing required environment variable: {RINGR_BEARER_TOKEN_ENV}")
+            raise ValueError(f"Missing required environment variable: {RINGR_BEARER_TOKEN}")
         base = {"authorization": f"Bearer {bearer_token}", "content-type": "application/json"}
         headers = merge_headers_simple(base, self.parser_headers, allow_override_sensitive=self.allow_override_sensitive)
         return {"method": self.method, "url": self.url, "headers": headers, "body": self.payload}
