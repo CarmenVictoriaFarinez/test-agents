@@ -1,4 +1,3 @@
-# ringr_agents/agents/debt_agent.py
 from __future__ import annotations
 from typing import Dict, Any, Optional
 from datetime import date

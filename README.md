@@ -166,7 +166,7 @@ Una solicitud vacía o `None` termina con `no_action`.
 Todas las requests incluyen:
 
 ```text
-Authorization: Bearer ringr_test_token_9f3a2c1d
+Authorization: Bearer <RINGR_BEARER_TOKEN>
 Content-Type: application/json
 ```
 
@@ -285,10 +285,49 @@ Cobertura aproximada: 98%
 
 ## Decisiones de diseño
 
-- `BaseAgent` concentra el ciclo común y evita duplicarlo en cada agente.
-- Cada agente mantiene únicamente sus reglas de negocio.
-- `Action` tiene una única definición compartida para evitar contratos divergentes.
-- Los modelos se expresan mediante Protocols para permitir mocks e implementaciones futuras.
-- Las integraciones son simuladas para que los tests sean deterministas y no dependan de servicios externos.
-- La idempotencia se aplica antes de procesar una acción repetida y solo se registra como procesada después de una ejecución exitosa.
-- No se introduce concurrencia ni procesamiento distribuido porque no forma parte de los requisitos actuales y añadirlo aumentaría la complejidad sin aportar valor en este contexto.
+- `BaseAgent` concentra el ciclo común del turno:
+  obtención del mensaje, parsing, validación, decisión, idempotencia,
+  ejecución y respuesta al usuario. Esto evita duplicar el flujo en cada
+  agente y facilita añadir nuevos casos de uso.
+
+- Cada agente mantiene únicamente sus reglas de negocio. `DebtAgent`
+  conoce los requisitos de fecha y cantidad, mientras que
+  `AssistanceAgent` conoce los requisitos de una solicitud de atención.
+  De esta forma, las reglas de un agente no contaminan a los demás.
+
+- `Action` tiene una única definición compartida en
+  `integrations/contracts.py`. Esta abstracción permite añadir nuevas
+  acciones, como email, SMS o base de datos, sin modificar `BaseAgent`.
+
+- Los modelos se expresan mediante `Protocol`. Esto permite utilizar
+  implementaciones reales, simulaciones o mocks siempre que cumplan los
+  métodos `answer_user()` y `parse_data()`. Así se reduce el acoplamiento
+  con proveedores concretos de LLM.
+
+- La autenticación se añade en la capa de integración, no en los agentes.
+  Así, los agentes solo crean acciones de negocio y no conocen los detalles
+  técnicos de HTTP.
+
+- La idempotencia se aplica antes de ejecutar una acción repetida. El
+  identificador se calcula de forma determinista a partir de la URL y el
+  body. La acción solo se registra como procesada después de una respuesta
+  exitosa.
+
+- Las acciones fallidas no se registran como procesadas. Esto permite
+  reintentar una operación cuando el endpoint simulado devuelve un error.
+
+- La respuesta conversacional se separa del resultado técnico. El agente 
+  devuelve tanto el estado de la operación como agent_response, que representa el mensaje 
+  que recibiría el usuario. En una puesta en producción, esta capa podría generar respuestas 
+  dinámicas basadas en el contexto de la conversación y el resultado de la acción.
+
+- El logging se realiza en `BaseAgent`, porque allí se conocen todas las
+  etapas del ciclo. Los logs permiten observar éxitos, errores y duplicados
+  sin incluir tokens ni requests completas.
+
+- No se introduce concurrencia ni procesamiento distribuido porque no forma
+  parte de los requisitos actuales. La implementación actual es síncrona,
+  determinista y adecuada para la prueba. Para producción, el almacenamiento
+  de idempotencia debería sustituirse por Redis o una base de datos con
+  operaciones atómicas, y el procesamiento podría envolverse en una cola
+  con workers.

@@ -6,7 +6,6 @@ from integrations.action import HttpAction
 from models import ConversationModel, ParserModel
 from errors import CODE_ACTION_FAILED, CODE_DUPLICATE, CODE_PARSER_ERROR, CODE_VALIDATION_ERROR
 
-
 def test_debt_turn_uses_models_and_builds_post_request():
     conversation = ConversationModel("Confirmo el pago")
     parser = ParserModel(

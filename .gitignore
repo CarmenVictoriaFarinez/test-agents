@@ -17,7 +17,6 @@ coverage.xml
 # Local configuration and secrets
 .env
 .env.*
-!.env.example
 
 # IDE and OS files
 .vscode/

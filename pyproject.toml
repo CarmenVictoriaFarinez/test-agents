@@ -3,6 +3,9 @@ name = "ringr_agents"
 version = "0.1.0"
 description = "Prueba técnica"
 requires-python = ">=3.10"
+dependencies = [
+	"python-dotenv>=1.0,<2.0",
+]
 
 [tool.black]
 line-length = 88

@@ -1,14 +1,17 @@
-# ringr_agents/integrations/action.py
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
+
+from dotenv import load_dotenv
 
 from utils.idempotency import compute_action_id
 from integrations.contracts import Action
 
 _SENSITIVE = {"authorization", "content-type"}
-RINGR_BEARER_TOKEN = "ringr_test_token_9f3a2c1d"
+RINGR_BEARER_TOKEN_ENV = "RINGR_BEARER_TOKEN"
+load_dotenv()
 
 
 def merge_headers_simple(
@@ -56,7 +59,10 @@ class HttpAction(Action):
         return compute_action_id(self.url, self.payload)
 
     def build_request(self) -> Dict[str, Any]:
-        base = {"authorization": f"Bearer {RINGR_BEARER_TOKEN}", "content-type": "application/json"}
+        bearer_token = os.getenv(RINGR_BEARER_TOKEN_ENV)
+        if not bearer_token:
+            raise ValueError(f"Missing required environment variable: {RINGR_BEARER_TOKEN_ENV}")
+        base = {"authorization": f"Bearer {bearer_token}", "content-type": "application/json"}
         headers = merge_headers_simple(base, self.parser_headers, allow_override_sensitive=self.allow_override_sensitive)
         return {"method": self.method, "url": self.url, "headers": headers, "body": self.payload}
 
